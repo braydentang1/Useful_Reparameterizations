@@ -11,9 +11,9 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Purpose
 
-With HMC based MCMC sampling, difficulties often arise when attempting to sample from distributions that have complex geometry. The highly simplified, non-rigorous TLDR for why this happens is that the "ideal" step size (how long the random momentum is imparted on the sampler per each step) in some regions of these distributions are less than ideal in other regions. 
+With HMC based MCMC sampling, difficulties often arise when attempting to sample from distributions that have complex geometries. The highly simplified, non-rigorous TLDR for why this happens is that the "ideal" step size (how long the random momentum is imparted on the sampler per each time step) in some regions of these distributions is less than ideal in other regions of the distribution. 
 
-This mismatch in optimal step size leads to proposals that are still within the same region of the distribution and/or inadequate exploration of specific regions of the distribution, leading to high autocorrelation within chains/inefficient sampling and/or biased posteriors.
+This mismatch in optimal step size leads to proposals that are within the same region of the distribution that the sampler currently is at, and/or inadequate exploration of specific regions of the distribution, leading to high autocorrelation within chains/inefficient sampling and/or biased posteriors.
 
 There are two main culprits that create these complex geometries:
 
@@ -24,9 +24,9 @@ There are two main culprits that create these complex geometries:
 2) Sampling from heavy tailed distributions
     - example: Cauchy, Student-T, Lognormal, Pareto, Inverse-Gaussian, etc.
     
-To get around these issues, reparameterizing the model to only explicitly sample from "geometrically friendly" distributions is key as other solutions (such as increasing adapt_delta or the maximum treedepth) come at the cost of increased computation time. A clever reparameterization doesn't have these issues and often leads to significant speedup and efficiency gains. The key idea is that we can utilize key facts from probability theory (specifically transformations of random variables) to transform samples from these "nice" distributions to samples from these difficult distributions.
+To get around these issues, reparameterizing the model to explicitly sample from "geometrically friendly" distributions is key as other solutions (such as increasing adapt_delta or the maximum treedepth) come at the cost of increased computation time. A clever reparameterization doesn't have these issues and often leads to significant speedup and efficiency gains. The key idea is that we can utilize facts from probability theory by applying a specific transformation to a sample that comes from a "convenient" distributions. The resulting transformed sample can then be proven to come from the more complex distribution.
 
-"Nice" distributions are typically Uniform(0, 1), Gamma(a, b), or Normal(0, 1) distributions. HMC samplers typically don't have many issues with these distributions as they their tails are rather regular.
+"Convenient" distributions are typically Uniform(0, 1), Gamma(a, b), or Normal(0, 1) distributions. HMC samplers typically don't have many issues with these distributions as their tails are rather regular.
 
 This document is just a convenient lookup table for me so that I don't have to constantly scan Google for transformations that I only vaguely remember.
 
@@ -42,4 +42,4 @@ This document is just a convenient lookup table for me so that I don't have to c
 
 ## Inverse Gaussian
 
-## 
+## Multivariate Normal 
