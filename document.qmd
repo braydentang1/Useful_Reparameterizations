@@ -14,9 +14,9 @@ engine: knitr
 
 # Purpose
 
-With HMC based MCMC sampling, difficulties often arise when attempting to sample from distributions that have complex geometries. The highly simplified, non-rigorous TLDR for why this happens is that the "ideal" step size (how long the random momentum is imparted on the sampler per each time step) in some regions of these distributions is less than ideal in other regions of the distribution. 
+With HMC based MCMC sampling, difficulties often arise when attempting to sample from distributions that have complex geometries. The highly simplified, non-rigorous TLDR for why this happens is that the "ideal" step size (how long the random momentum is imparted on the sampler per each time step) in some regions of these distributions is less than ideal in others.
 
-This mismatch in optimal step size leads to proposals that are within the same region of the distribution that the sampler currently is at, and/or inadequate exploration of specific regions of the distribution, leading to high autocorrelation within chains/inefficient sampling and/or biased posteriors.
+This mismatch in optimal step size leads to proposals that are within the same region of the distribution that the sampler currently is at, and/or inadequate exploration of specific regions of the distribution, leading to high autocorrelation within chains (inefficient sampling), longer computation time, and/or biased posteriors.
 
 There are two main culprits that create these complex geometries:
 
