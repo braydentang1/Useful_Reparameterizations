@@ -1,0 +1,180 @@
+---
+title: "Useful Reparameterizations"
+author: "Brayden Tang"
+date: "24/08/2022"
+bibliography: "bibliography.bib"
+format:
+    html:
+        code-fold: true
+        toc: true
+        toc-location: left
+        self-contained: true
+engine: knitr
+---
+
+# Purpose
+
+With HMC based MCMC sampling, difficulties often arise when attempting to sample from distributions that have complex geometries. The highly simplified, non-rigorous TLDR for why this happens is that the "ideal" step size (how long the random momentum is imparted on the sampler per each time step) in some regions of these distributions is less than ideal in other regions of the distribution. 
+
+This mismatch in optimal step size leads to proposals that are within the same region of the distribution that the sampler currently is at, and/or inadequate exploration of specific regions of the distribution, leading to high autocorrelation within chains/inefficient sampling and/or biased posteriors.
+
+There are two main culprits that create these complex geometries:
+
+1) Highly correlated posterior parameters
+    - the classic example being centered Normal parameterizations, commonly used when fitting hierarchical models
+    - another example: intercept + predictor coefficients where predictors were not centered and scaled
+
+2) Sampling from heavy tailed distributions
+    - example: Cauchy, Student-T, Lognormal, Pareto, Inverse-Gaussian, etc.
+    
+To get around these issues, reparameterizing the model to explicitly sample from "geometrically friendly" distributions is key as other solutions (such as increasing adapt_delta or the maximum tree depth) come at the cost of increased computation time. A clever reparameterization doesn't have these issues and often leads to significant speedup and efficiency gains. The key idea is that we can utilize facts from probability theory by applying a specific transformation to a sample that comes from a "convenient" distribution. The resulting transformed sample can then be proven to come from the more complex distribution, effectively deriving samples from the complex distribution without explicitly sampling from it.
+
+"Convenient" distributions are typically Uniform(0, 1), Gamma(a, b), or Normal(0, 1) distributions. HMC samplers typically don't have many issues with these distributions as their tails are rather regular.
+
+This document is just a convenient lookup table for me so that I don't have to constantly scan Google for transformations.
+
+```{python}
+import pandas as pd
+import numpy as np
+import cmdstanpy as stan
+```
+
+# Inventory
+
+## Cauchy
+
+The Cauchy distribution has extremely heavy tails, making it difficult to sample from directly. Ideal step sizes in the tails tend to be larger than what is ideal near the mode. 
+
+Note that the commonly used half-Cauchy prior does not appear to exhibit inefficient sampling performance, and using such a formulation is unlikely the source of many problems (@aki-cauchy)
+
+There are two well know transformations that can be used to sample from the Cauchy distribution, with the first one being the most versatile.
+
+### Option 1
+
+One can demonstrate that the quantile function of any continuous random variable is itself a random variable that is Uniform(0, 1). This is often called the probability integral transform (PIT).
+
+This is particularly convenient for heavy-tailed distributions that have closed form solutions for their quantile functions, like the Cauchy distribution.
+
+Let $U \sim \text{Uniform}(0, 1).$ Then, if
+
+$$W = \mu + \gamma \times \text{tan}(\pi(U-0.5)),$$ then $W \sim \text{Cauchy}(\mu, \gamma).$
+
+To simplify the computation, we can shift back the Uniform distribution by $\pi/2$ since the tan function is repeating over intervals of $\pi$. 
+
+Let $U \sim \text{Uniform}(-\pi/2, \pi/2).$ Then, if
+
+$$W = \mu + \gamma \times \text{tan}(U),$$ then $W \sim \text{Cauchy}(\mu, \gamma).$
+
+#### Example Stan Code
+
+```stan
+data {
+// ....
+}
+
+parameters {
+    real<lower=0> gamma;
+    real mu;
+    // implicitly sampling a uniform(-pi/2, pi/2) here
+    real<lower=-pi()/2, upper=pi()/2> unif; 
+}
+
+transformed parameters {
+    real W = mu + gamma * tan(unif); // implies W is cauchy(mu, gamma)
+}
+
+model {
+    // any priors on the cauchy parameters are fine here, 
+    // this is just an example
+    mu ~ std_normal();
+    gamma ~ student_t(3, 0, 2.5);
+}
+```
+
+### Option 2 (specific to Cauchy(0, 1))
+
+The Cauchy(0, 1) distribution can be expressed as a scale mixture of Normal distributions.
+
+Let $Z \sim \text{Normal}(0,1)$ and $\tau \sim \text{Gamma}(0.5, 0.5).$
+
+Then, if
+$$X = \frac{Z}{\sqrt \tau}$$
+then $X \sim \text{Cauchy}(0, 1).$
+
+This is nothing but a Student-T distribution with one degree of freedom.
+
+#### Example Stan Code
+
+```stan 
+data {
+// ....
+}
+
+parameters {
+    real<lower=0> tau;
+    real Z;
+}
+
+transformed parameters {
+    real X = Z / sqrt(tau); // implies X is cauchy(0, 1)
+}
+
+model {
+    Z ~ std_normal();
+    tau ~ gamma(0.5, 0.5);
+}
+```
+
+## Student-T
+
+Difficult to sample from for similar reasons as the Cauchy. We are assuming the Stan parameterization here, which involves the degrees of freedom $\nu$, location parameter $\mu,$ and the scale parameter $\sigma$.
+
+Also note that a Student-T distribution with one degree of freedom is a Cauchy(0, 1) distribution.
+
+### Option 1
+
+Let $Z \sim \text{Normal}(0,1)$, and $M \sim \chi^2(\nu).$
+
+Then, if
+$$X = Z \sigma \sqrt \frac{\nu}{M} + \mu $$ then $X \sim \text{Student-T}(\nu, \mu, \sigma).$
+
+#### Example Stan Code
+
+In this example, assume the target distribution is a Student-T(3, 0, 2.5).
+
+```stan
+data {
+// ....
+}
+
+parameters {
+    real<lower=0> sigma;
+    real Z;
+    real<lower=0> M;
+}
+
+transformed parameters {
+    real X = Z * 2.5 * sqrt(3/M); // implies X is Student-T(3, 0, 2.5)
+}
+
+model {
+    Z ~ std_normal();
+    M ~ chi_square(3);
+}
+```
+
+### Option 2 (specific to Student-T(K,0,1))
+
+
+
+## Normal(inferred mu, inferred sigma)
+
+## Lognormal
+
+## Pareto (Lomax)
+
+## Inverse Gaussian
+
+## Multivariate Normal 
+
+<br>
