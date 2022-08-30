@@ -2524,10 +2524,18 @@ Object.defineProperty(e,"__esModule",{value:!0}),e.mhchemParser=void 0;var r=fun
   <li><a href="#option-1-1" id="toc-option-1-1" class="nav-link" data-scroll-target="#option-1-1">Option 1</a></li>
   <li><a href="#option-2-specific-to-student-tk01" id="toc-option-2-specific-to-student-tk01" class="nav-link" data-scroll-target="#option-2-specific-to-student-tk01">Option 2 (specific to Student-T(K,0,1))</a></li>
   </ul></li>
-  <li><a href="#normalinferred-mu-inferred-sigma" id="toc-normalinferred-mu-inferred-sigma" class="nav-link" data-scroll-target="#normalinferred-mu-inferred-sigma">Normal(inferred mu, inferred sigma)</a></li>
-  <li><a href="#lognormal" id="toc-lognormal" class="nav-link" data-scroll-target="#lognormal">Lognormal</a></li>
-  <li><a href="#pareto-lomax" id="toc-pareto-lomax" class="nav-link" data-scroll-target="#pareto-lomax">Pareto (Lomax)</a></li>
-  <li><a href="#inverse-gaussian" id="toc-inverse-gaussian" class="nav-link" data-scroll-target="#inverse-gaussian">Inverse Gaussian</a></li>
+  <li><a href="#normalinferred-mu-inferred-sigma" id="toc-normalinferred-mu-inferred-sigma" class="nav-link" data-scroll-target="#normalinferred-mu-inferred-sigma">Normal(inferred mu, inferred sigma)</a>
+  <ul class="collapse">
+  <li><a href="#option-1-2" id="toc-option-1-2" class="nav-link" data-scroll-target="#option-1-2">Option 1</a></li>
+  </ul></li>
+  <li><a href="#lognormal" id="toc-lognormal" class="nav-link" data-scroll-target="#lognormal">Lognormal</a>
+  <ul class="collapse">
+  <li><a href="#option-1-3" id="toc-option-1-3" class="nav-link" data-scroll-target="#option-1-3">Option 1</a></li>
+  </ul></li>
+  <li><a href="#pareto-lomax" id="toc-pareto-lomax" class="nav-link" data-scroll-target="#pareto-lomax">Pareto (Lomax)</a>
+  <ul class="collapse">
+  <li><a href="#option-1-4" id="toc-option-1-4" class="nav-link" data-scroll-target="#option-1-4">Option 1</a></li>
+  </ul></li>
   <li><a href="#multivariate-normal" id="toc-multivariate-normal" class="nav-link" data-scroll-target="#multivariate-normal">Multivariate Normal</a></li>
   </ul></li>
   </ul>
@@ -2700,19 +2708,178 @@ Object.defineProperty(e,"__esModule",{value:!0}),e.mhchemParser=void 0;var r=fun
 </section>
 <section id="option-2-specific-to-student-tk01" class="level3">
 <h3 class="anchored" data-anchor-id="option-2-specific-to-student-tk01">Option 2 (specific to Student-T(K,0,1))</h3>
+<p>Let <span class="math inline">\(\tau \sim \text{Gamma}(\nu/2, \nu/2)\)</span> and <span class="math inline">\(\beta \sim \text{Normal}(0, \tau^{-0.5})\)</span>. Then, <span class="math display">\[\beta \sim \text{Student-T}(\nu, 0, 1).\]</span></p>
+<section id="example-stan-code-3" class="level4">
+<h4 class="anchored" data-anchor-id="example-stan-code-3">Example Stan Code</h4>
+<p>In this example, assume the target distribution is a Student-T(nu, 0, 1).</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode stan code-with-copy"><code class="sourceCode stan"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> {</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="co">// ....</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="kw">parameters</span> {</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">real</span>&lt;<span class="kw">lower</span>=<span class="dv">0</span>&gt; sigma;</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">real</span>&lt;<span class="kw">lower</span>=<span class="dv">0</span>&gt; tau;</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">real</span>&lt;<span class="kw">lower</span>=<span class="dv">0</span>&gt; nu;</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>    <span class="dt">real</span> Z;</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a><span class="kw">transformed parameters</span> {</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>    <span class="co">// implies beta ~ normal(0, tau^-0.5) = student-t(nu, 0, 1)</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>    <span class="dt">real</span> beta = pow(tau, -<span class="fl">0.5</span>) * Z;</span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a><span class="kw">model</span> {</span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>    Z ~ std_normal();</span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>    tau ~ gamma(nu/<span class="dv">2</span>, nu/<span class="dv">2</span>);</span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
 </section>
 </section>
 <section id="normalinferred-mu-inferred-sigma" class="level2">
 <h2 class="anchored" data-anchor-id="normalinferred-mu-inferred-sigma">Normal(inferred mu, inferred sigma)</h2>
+<section id="option-1-2" class="level3">
+<h3 class="anchored" data-anchor-id="option-1-2">Option 1</h3>
+<p>While the normal distribution doesn’t have very heavy tails, problems can arise when the parameters mu and sigma are highly correlated in the resulting posterior distribution. The high correlation between mu and sigma can induce similar problems to distributions with heavy tails where the ideal step size significantly varies depending on where the sampler is currently at.</p>
+<p>These kinds of issues typically arise with random effect/multilevel models, which assume that the individual average effect of each level/grouping within a variable comes from a common Normal distribution with mean <span class="math inline">\(\mu\)</span> and standard deviation <span class="math inline">\(\sigma\)</span>.</p>
+<p>In cases where the data is not very informative or smaller in size, it has been found that using a non-centered parameterization tends to be more efficient (see <a href="https://discourse.mc-stan.org/t/centered-vs-non-centered-parameterizations/7344">here</a>). In other words, exploit the following well-known relationship: if <span class="math inline">\(X \sim \text{Normal}(\mu, \sigma)\)</span> and <span class="math inline">\(Y = Z\sigma + \mu\)</span>, then <span class="math inline">\(Y \sim \text{Normal}(\mu, \sigma)\)</span> if <span class="math inline">\(Z \sim \text{Normal}(0, 1).\)</span></p>
+<p>That is, it is possibly more efficient to sample from a Normal(0, 1) distribution and transform the resulting samples to the centered normal distribution, then it is to sample directly from the centered normal distribution. This is commonly referred to as “Matt’s trick”.</p>
+<p>Note that in other cases, sampling directly from the centered normal distribution might be preferable if the data is informative or larger in size. For a more involved discussion, see <a href="https://discourse.mc-stan.org/t/centered-vs-non-centered-parameterizations/7344">here</a>.</p>
+<section id="example-stan-code-4" class="level4">
+<h4 class="anchored" data-anchor-id="example-stan-code-4">Example Stan Code</h4>
+<p>Consider the famous <a href="https://www.tensorflow.org/probability/examples/Eight_Schools">eight schools dataset</a>. Assume that each of these average treatment effects are realizations that come from some common Normal distribution.</p>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>num_schools <span class="op">=</span> <span class="dv">8</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>stan_list <span class="op">=</span> {</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">'num_schools'</span>: num_schools,  <span class="co"># number of schools</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">'treatment_effects'</span>: np.array([<span class="dv">28</span>, <span class="dv">8</span>, <span class="op">-</span><span class="dv">3</span>, <span class="dv">7</span>, <span class="op">-</span><span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">18</span>, <span class="dv">12</span>], dtype<span class="op">=</span>np.float32),</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">'treatment_stddevs'</span>: np.array([<span class="dv">15</span>, <span class="dv">10</span>, <span class="dv">16</span>, <span class="dv">11</span>, <span class="dv">9</span>, <span class="dv">11</span>, <span class="dv">10</span>, <span class="dv">18</span>], dtype<span class="op">=</span>np.float32),</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">'school_id'</span>: np.arange(num_schools) <span class="op">+</span> <span class="dv">1</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>The centered parameterization is:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode stan code-with-copy"><code class="sourceCode stan"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> {</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span>&lt;<span class="kw">lower</span>=<span class="dv">1</span>&gt; num_schools;</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">vector</span>[num_schools] treatment_effects;</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">vector</span>&lt;<span class="kw">lower</span>=<span class="dv">0</span>&gt;[num_schools] treatment_stddevs;</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span>&lt;<span class="kw">lower</span>=<span class="dv">1</span>&gt; school_id[num_schools];</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="kw">parameters</span> {</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>    <span class="dt">real</span> mu;</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>    <span class="dt">real</span>&lt;<span class="kw">lower</span>=<span class="dv">0</span>&gt; sigma;</span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>    <span class="dt">real</span>&lt;<span class="kw">lower</span>=<span class="dv">0</span>&gt; sigma_school;</span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>    <span class="dt">real</span> mu_school[num_schools];</span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a><span class="kw">model</span> {</span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>    treatment_effects ~ normal(mu_school[school_id], treatment_stddevs);</span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>    mu_school ~ normal(mu, sigma_school);</span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>    <span class="co">// arbitrary for the sake of this example</span></span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>    sigma_school ~ student_t(<span class="dv">3</span>, <span class="dv">0</span>, <span class="fl">2.5</span>);</span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>    mu ~ normal(<span class="dv">0</span>, <span class="dv">5</span>);</span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>The non-centered parameterization, which in this case is far more efficient:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode stan code-with-copy"><code class="sourceCode stan"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> {</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span>&lt;<span class="kw">lower</span>=<span class="dv">1</span>&gt; num_schools;</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">vector</span>[num_schools] treatment_effects;</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">vector</span>&lt;<span class="kw">lower</span>=<span class="dv">0</span>&gt;[num_schools] treatment_stddevs;</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span>&lt;<span class="kw">lower</span>=<span class="dv">1</span>&gt; school_id[num_schools];</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="kw">parameters</span> {</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>    <span class="dt">real</span> mu;</span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>    <span class="dt">real</span>&lt;<span class="kw">lower</span>=<span class="dv">0</span>&gt; sigma;</span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>    <span class="dt">real</span>&lt;<span class="kw">lower</span>=<span class="dv">0</span>&gt; sigma_school;</span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>    <span class="dt">real</span> eta_school[num_schools];</span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a><span class="kw">transformed parameters</span> {</span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>    <span class="co">// implies mu_school ~ normal(mu, sigma_school)</span></span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>    <span class="dt">real</span> mu_school[num_schools] = mu + sigma_school * eta_school; </span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a><span class="kw">model</span> {</span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a>    treatment_effects ~ normal(mu_school[school_id], treatment_stddevs);</span>
+<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a>    eta_school ~ std_normal();</span>
+<span id="cb8-24"><a href="#cb8-24" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb8-25"><a href="#cb8-25" aria-hidden="true" tabindex="-1"></a>    <span class="co">// arbitrary for the sake of this example</span></span>
+<span id="cb8-26"><a href="#cb8-26" aria-hidden="true" tabindex="-1"></a>    sigma_school ~ student_t(<span class="dv">3</span>, <span class="dv">0</span>, <span class="fl">2.5</span>);</span>
+<span id="cb8-27"><a href="#cb8-27" aria-hidden="true" tabindex="-1"></a>    mu ~ normal(<span class="dv">0</span>, <span class="dv">5</span>);</span>
+<span id="cb8-28"><a href="#cb8-28" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+</section>
 </section>
 <section id="lognormal" class="level2">
 <h2 class="anchored" data-anchor-id="lognormal">Lognormal</h2>
+<section id="option-1-3" class="level3">
+<h3 class="anchored" data-anchor-id="option-1-3">Option 1</h3>
+<p>Let <span class="math inline">\(X \sim \text{Normal}(\mu, \sigma)\)</span> and let <span class="math inline">\(Y = exp(X).\)</span> Then Y has a Lognormal distribution with parameters <span class="math inline">\(\mu, \sigma\)</span>.</p>
+<p>Equivalently, if <span class="math inline">\(X \sim \text{Lognormal}(\mu, \sigma)\)</span> then <span class="math inline">\(Y = ln(X)\)</span> has a Normal distribution with parameters <span class="math inline">\(\mu, \sigma\)</span>.</p>
+<p>This transformation is extremely useful when working with likelihoods and parameters. It is almost always a better idea to log transform the assumed conditionally lognormal random variable first (and subsequently sampling from the normal distribution) rather than sampling from the much heavier tailed lognormal distribution directly.</p>
+<section id="example-stan-code-5" class="level4">
+<h4 class="anchored" data-anchor-id="example-stan-code-5">Example Stan Code</h4>
+<div class="sourceCode" id="cb9"><pre class="sourceCode stan code-with-copy"><code class="sourceCode stan"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> {</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span>&lt;<span class="kw">lower</span>=<span class="dv">0</span>&gt; Nobs;</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">vector</span>&lt;<span class="kw">lower</span>=<span class="dv">0</span>&gt;[Nobs] lognormal_rv;</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="kw">transformed data</span> {</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">vector</span>[Nobs] normal_rv = log(lognormal_rv);</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a><span class="kw">parameters</span> {</span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>    <span class="dt">vector</span>[Nobs] mu;</span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>    <span class="dt">real</span>&lt;<span class="kw">lower</span>=<span class="dv">0</span>&gt; sigma;</span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a><span class="kw">model</span> {</span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a>    normal_rv ~ normal(mu, sigma);</span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a><span class="kw">generated quantities</span> {</span>
+<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Get the posterior predictive distribution</span></span>
+<span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Can get back the response on the original scale this way with no </span></span>
+<span id="cb9-22"><a href="#cb9-22" aria-hidden="true" tabindex="-1"></a>    <span class="co">// transformation bias, unlike in frequentist case with </span></span>
+<span id="cb9-23"><a href="#cb9-23" aria-hidden="true" tabindex="-1"></a>    <span class="co">// OLS + log response</span></span>
+<span id="cb9-24"><a href="#cb9-24" aria-hidden="true" tabindex="-1"></a>    <span class="dt">real</span>&lt;<span class="kw">lower</span>=<span class="dv">0</span>&gt; posterior_pred_rep[Nobs];</span>
+<span id="cb9-25"><a href="#cb9-25" aria-hidden="true" tabindex="-1"></a>    posterior_pred_rep = lognormal_rng(mu, sigma);</span>
+<span id="cb9-26"><a href="#cb9-26" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+</section>
 </section>
 <section id="pareto-lomax" class="level2">
 <h2 class="anchored" data-anchor-id="pareto-lomax">Pareto (Lomax)</h2>
+<section id="option-1-4" class="level3">
+<h3 class="anchored" data-anchor-id="option-1-4">Option 1</h3>
+<p>Use the PIT transform.</p>
+<p><span class="math inline">\(Let U \sim \text{Uniform}(0,1).\)</span> Then, if <span class="math display">\[X = \lambda ((1-U)^{\frac{-1}{\alpha}} - 1),\]</span> then <span class="math display">\[X \sim \text{Pareto/Lomax}(\alpha, \lambda).\]</span></p>
+<section id="example-stan-code-6" class="level4">
+<h4 class="anchored" data-anchor-id="example-stan-code-6">Example Stan Code</h4>
+<div class="sourceCode" id="cb10"><pre class="sourceCode stan code-with-copy"><code class="sourceCode stan"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">data</span> {</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="co">// ....</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="kw">parameters</span> {</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">real</span>&lt;<span class="kw">lower</span>=<span class="dv">0</span>&gt; alpha;</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">real</span>&lt;<span class="kw">lower</span>=<span class="dv">0</span>&gt; lambda;</span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">real</span>&lt;<span class="kw">lower</span>=<span class="dv">0</span>, <span class="kw">upper</span>=<span class="dv">1</span>&gt; unif;</span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a><span class="kw">transformed parameters</span> {</span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>    <span class="co">// implies Pareto/Lomax with parameters alpha, lambda</span></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>    <span class="dt">real</span> X = lambda * (pow(<span class="dv">1</span>-unif, -<span class="dv">1</span>/alpha) - <span class="dv">1</span>);</span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a><span class="kw">model</span> {</span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a><span class="co">// ....</span></span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
-<section id="inverse-gaussian" class="level2">
-<h2 class="anchored" data-anchor-id="inverse-gaussian">Inverse Gaussian</h2>
+</section>
 </section>
 <section id="multivariate-normal" class="level2">
 <h2 class="anchored" data-anchor-id="multivariate-normal">Multivariate Normal</h2>
