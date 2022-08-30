@@ -165,15 +165,194 @@ model {
 
 ### Option 2 (specific to Student-T(K,0,1))
 
+Let $\tau \sim \text{Gamma}(\nu/2, \nu/2)$ and $\beta \sim \text{Normal}(0, \tau^{-0.5})$. Then, $$\beta \sim \text{Student-T}(\nu, 0, 1).$$
 
+#### Example Stan Code
+
+In this example, assume the target distribution is a Student-T(nu, 0, 1).
+
+```stan
+data {
+// ....
+}
+
+parameters {
+    real<lower=0> sigma;
+    real<lower=0> tau;
+    real<lower=0> nu;
+    real Z;
+}
+
+transformed parameters {
+    // implies beta ~ normal(0, tau^-0.5) = student-t(nu, 0, 1)
+    real beta = pow(tau, -0.5) * Z;
+}
+
+model {
+    Z ~ std_normal();
+    tau ~ gamma(nu/2, nu/2);
+}
+```
 
 ## Normal(inferred mu, inferred sigma)
 
+### Option 1
+
+While the normal distribution doesn't have very heavy tails, problems can arise when the parameters mu and sigma are highly correlated in the resulting posterior distribution. The high correlation between mu and sigma can induce similar problems to distributions with heavy tails where the ideal step size significantly varies depending on where the sampler is currently at. 
+
+These kinds of issues typically arise with random effect/multilevel models, which assume that the individual average effect of each level/grouping within a variable comes from a common Normal distribution with mean $\mu$ and standard deviation $\sigma$. 
+
+In cases where the data is not very informative or smaller in size, it has been found that using a non-centered parameterization tends to be more efficient (see [here](https://discourse.mc-stan.org/t/centered-vs-non-centered-parameterizations/7344)). In other words, exploit the following well-known relationship: if $X \sim \text{Normal}(\mu, \sigma)$ and $Y = Z\sigma + \mu$, then $Y \sim \text{Normal}(\mu, \sigma)$ if $Z \sim \text{Normal}(0, 1).$
+
+That is, it is possibly more efficient to sample from a Normal(0, 1) distribution and transform the resulting samples to the centered normal distribution, then it is to sample directly from the centered normal distribution. This is commonly referred to as "Matt's trick".
+
+Note that in other cases, sampling directly from the centered normal distribution might be preferable if the data is informative or larger in size. For a more involved discussion, see [here](https://discourse.mc-stan.org/t/centered-vs-non-centered-parameterizations/7344).
+
+#### Example Stan Code
+
+Consider the famous [eight schools dataset](https://www.tensorflow.org/probability/examples/Eight_Schools). Assume that each of these average treatment effects are realizations that come from some common Normal distribution.
+
+```{python}
+num_schools = 8
+stan_list = {
+    'num_schools': num_schools,  # number of schools
+    'treatment_effects': np.array([28, 8, -3, 7, -1, 1, 18, 12], dtype=np.float32),
+    'treatment_stddevs': np.array([15, 10, 16, 11, 9, 11, 10, 18], dtype=np.float32),
+    'school_id': np.arange(num_schools) + 1
+}
+```
+
+The centered parameterization is:
+
+```stan
+data {
+    int<lower=1> num_schools;
+    vector[num_schools] treatment_effects;
+    vector<lower=0>[num_schools] treatment_stddevs;
+    int<lower=1> school_id[num_schools];
+}
+
+parameters {
+    real mu;
+    real<lower=0> sigma;
+    real<lower=0> sigma_school;
+    real mu_school[num_schools];
+}
+
+model {
+    treatment_effects ~ normal(mu_school[school_id], treatment_stddevs);
+    mu_school ~ normal(mu, sigma_school);
+    
+    // arbitrary for the sake of this example
+    sigma_school ~ student_t(3, 0, 2.5);
+    mu ~ normal(0, 5);
+}
+```
+
+The non-centered parameterization, which in this case is far more efficient:
+
+```stan
+data {
+    int<lower=1> num_schools;
+    vector[num_schools] treatment_effects;
+    vector<lower=0>[num_schools] treatment_stddevs;
+    int<lower=1> school_id[num_schools];
+}
+
+parameters {
+    real mu;
+    real<lower=0> sigma;
+    real<lower=0> sigma_school;
+    real eta_school[num_schools];
+}
+
+transformed parameters {
+    // implies mu_school ~ normal(mu, sigma_school)
+    real mu_school[num_schools] = mu + sigma_school * eta_school; 
+}
+
+model {
+    treatment_effects ~ normal(mu_school[school_id], treatment_stddevs);
+    
+    eta_school ~ std_normal();
+    
+    // arbitrary for the sake of this example
+    sigma_school ~ student_t(3, 0, 2.5);
+    mu ~ normal(0, 5);
+}
+```
+
 ## Lognormal
+
+### Option 1
+
+Let $X \sim \text{Normal}(\mu, \sigma)$ and let $Y = exp(X).$ Then Y has a Lognormal distribution with parameters $\mu, \sigma$.
+
+Equivalently, if $X \sim \text{Lognormal}(\mu, \sigma)$ then $Y = ln(X)$ has a Normal distribution with parameters $\mu, \sigma$.
+
+This transformation is extremely useful when working with likelihoods and parameters. It is almost always a better idea to log transform the assumed conditionally lognormal random variable first (and subsequently sampling from the normal distribution) rather than sampling from the much heavier tailed lognormal distribution directly.
+
+#### Example Stan Code
+
+```stan
+data {
+    int<lower=0> Nobs;
+    vector<lower=0>[Nobs] lognormal_rv;
+}
+
+transformed data {
+    vector[Nobs] normal_rv = log(lognormal_rv);
+}
+
+parameters {
+    vector[Nobs] mu;
+    real<lower=0> sigma;
+}
+
+model {
+    normal_rv ~ normal(mu, sigma);
+}
+
+generated quantities {
+    // Get the posterior predictive distribution
+    // Can get back the response on the original scale this way with no 
+    // transformation bias, unlike in frequentist case with 
+    // OLS + log response
+    real<lower=0> posterior_pred_rep[Nobs];
+    posterior_pred_rep = lognormal_rng(mu, sigma);
+}
+```
 
 ## Pareto (Lomax)
 
-## Inverse Gaussian
+### Option 1
+
+Use the PIT transform.
+
+$Let U \sim \text{Uniform}(0,1).$ Then, if $$X = \lambda ((1-U)^{\frac{-1}{\alpha}} - 1),$$ then $$X \sim \text{Pareto/Lomax}(\alpha, \lambda).$$
+
+#### Example Stan Code
+
+```stan
+data {
+// ....
+}
+
+parameters {
+    real<lower=0> alpha;
+    real<lower=0> lambda;
+    real<lower=0, upper=1> unif;
+}
+
+transformed parameters {
+    // implies Pareto/Lomax with parameters alpha, lambda
+    real X = lambda * (pow(1-unif, -1/alpha) - 1);
+}
+
+model {
+// ....
+}
+```
 
 ## Multivariate Normal 
 
